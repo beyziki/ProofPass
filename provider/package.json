@@ -1,0 +1,9 @@
+{
+  "name": "kimlikkasasi-provider",
+  "version": "1.0.0",
+  "description": "KimlikKasası - e-Devlet benzeri SENTETİK veri sağlayıcı (Data Privacy dersi demosu)",
+  "private": true,
+  "engines": { "node": ">=22.13" },
+  "scripts": { "seed": "node seed.js", "start": "node server.js" },
+  "dependencies": { "circomlibjs": "0.1.7" }
+}

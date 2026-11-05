@@ -1,0 +1,7 @@
+node_modules/
+provider/data/
+rental/data/
+*.zip
+eski_dosyalar/
+.DS_Store
+Thumbs.db

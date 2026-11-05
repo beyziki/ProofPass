@@ -1,0 +1,856 @@
+<title>PrivacyDrive</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* PrivacyDrive: gerçek bir kiralama markası gibi; lacivert üst alan, temiz beyaz yüzeyler.
+   Gizlilik korumalı akış turkuaz, klasik akış turuncu. Tek aile: Manrope; teknik çıktılar JetBrains Mono. */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#eaeff6; --ink:#0b1b2e; --muted:#586a80; --line:#dde4ee;
+  --accent:#0a7f76; --accent-ink:#ffffff; --accent-soft:#d8f2ee;
+  --classic:#c2410c; --classic-soft:#ffe8d9;
+  --good:#15803d; --good-soft:#d9f5e3; --bad:#b91c1c; --bad-soft:#fde2e2;
+  --glass:#bcd8e8; --stage:#e6edf6; --stage-2:#d6e1ef;
+  --hero-a:#0a2342; --hero-b:#0f4c81;
+  --shadow:0 1px 2px rgba(11,27,46,.06),0 6px 20px rgba(11,27,46,.06);
+  --shadow-lg:0 2px 6px rgba(11,27,46,.06),0 24px 56px rgba(11,27,46,.14);
+  --r:16px; --r-sm:10px;
+  --f-body:'Manrope','Segoe UI',system-ui,sans-serif; --f-display:var(--f-body);
+  --f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#08111d; --surface:#0f1c2d; --surface-2:#16263b; --ink:#e6edf7; --muted:#94a6bd; --line:#203149;
+  --accent:#2dd4bf; --accent-ink:#04201d; --accent-soft:#0e3633;
+  --classic:#fb923c; --classic-soft:#3a1f10;
+  --good:#4ade80; --good-soft:#0f3320; --bad:#f87171; --bad-soft:#3d1717;
+  --glass:#34586f; --stage:#122238; --stage-2:#0f1c2d; --hero-a:#07162b; --hero-b:#0b3a66;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3); --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 24px 56px rgba(0,0,0,.5);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08111d; --surface:#0f1c2d; --surface-2:#16263b; --ink:#e6edf7; --muted:#94a6bd; --line:#203149;
+  --accent:#2dd4bf; --accent-ink:#04201d; --accent-soft:#0e3633;
+  --classic:#fb923c; --classic-soft:#3a1f10;
+  --good:#4ade80; --good-soft:#0f3320; --bad:#f87171; --bad-soft:#3d1717;
+  --glass:#34586f; --stage:#122238; --stage-2:#0f1c2d; --hero-a:#07162b; --hero-b:#0b3a66;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3); --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 24px 56px rgba(0,0,0,.5);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:500 15px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.02em;line-height:1.12}
+h1{font-size:clamp(2.1rem,4.6vw,3.5rem);font-weight:800;letter-spacing:-.035em;line-height:1.04}
+h2{font-size:clamp(1.45rem,2.6vw,2rem);font-weight:800}
+h3{font-size:1.08rem;font-weight:700}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-size:.92em}
+.wrap{max-width:1180px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;color:inherit;cursor:pointer}
+.muted{color:var(--muted)} .small{font-size:13px}
+
+/* düğme, rozet */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);padding:11px 20px;min-height:46px;border-radius:12px;font-weight:700;text-decoration:none;transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 30%,transparent)}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.warn{background:transparent;color:var(--bad);border-color:var(--bad)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 12px/1 var(--f-body);padding:6px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip.ok{background:var(--good-soft);color:var(--good)} .chip.no{background:var(--bad-soft);color:var(--bad)}
+.chip.cl{background:var(--classic-soft);color:var(--classic)} .chip.zk{background:var(--accent-soft);color:var(--accent)}
+
+/* üst şerit ve başlık */
+.demo-bar{background:var(--hero-a);color:#b9c8dc;font:600 12px/1.4 var(--f-body);padding-block:7px}
+.demo-bar .wrap{display:flex;gap:4px 18px;flex-wrap:wrap;justify-content:space-between}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 85%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--hero-a)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand b{font:800 1.3rem var(--f-display);letter-spacing:-.03em}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(140deg,var(--hero-b),var(--accent));display:grid;place-items:center;box-shadow:0 4px 10px rgba(10,35,66,.25)}
+nav{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
+nav a{text-decoration:none;padding:9px 14px;border-radius:10px;font-weight:600;font-size:14.5px;color:var(--muted);transition:background .15s,color .15s}
+nav a:hover{color:var(--ink);background:var(--surface-2)}
+nav a[aria-current="page"]{color:var(--ink);background:var(--surface-2)}
+nav a#navAcc{margin-left:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+nav a#navAcc:hover{border-color:var(--ink)}
+nav a#navOut{color:var(--muted)}nav a#navOut:hover{color:var(--bad)}
+
+main{padding-block:28px 64px}
+.view[hidden]{display:none}
+.sec{margin-top:64px}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.sec-head p{color:var(--muted);max-width:60ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.panel.raised{box-shadow:var(--shadow-lg);border-color:transparent}
+
+/* form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.full{grid-column:1/-1}
+label,.lbl{font:700 12.5px/1.2 var(--f-body);color:var(--muted)}
+input,select,textarea{font:inherit;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 12px;min-height:46px;width:100%;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+input[type=range]{padding:0;min-height:30px;accent-color:var(--accent)}
+input[type=checkbox]{width:auto;min-height:0}
+
+/* ana sayfa: lacivert vitrin */
+.hero{position:relative;overflow:hidden;border-radius:28px;background:radial-gradient(900px 420px at 80% 10%,color-mix(in srgb,var(--hero-b) 90%,#3b82f6) 0%,transparent 60%),linear-gradient(160deg,var(--hero-a),var(--hero-b));color:#fff;padding:clamp(28px,5vw,56px) clamp(22px,4.5vw,56px) 150px;min-height:560px;display:block}
+.hero-copy{position:relative;z-index:2;max-width:560px}
+.hero h1{color:#fff}
+.hero .lead{margin-top:18px;font-size:1.1rem;color:#c3d3e8;max-width:46ch}
+.hero .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.hero .chip{background:rgba(255,255,255,.12);color:#e8f1fb}
+.hero .chip.zk{background:rgba(45,212,191,.18);color:#7ff0e0}
+.hero-car{position:absolute;right:28px;bottom:132px;width:min(560px,50%);z-index:1;filter:drop-shadow(0 30px 40px rgba(0,0,0,.35))}
+.hero-car svg{display:block;width:100%;height:auto}
+.road{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,transparent,rgba(5,15,30,.55))}
+.search{position:absolute;left:clamp(16px,3.5vw,40px);right:clamp(16px,3.5vw,40px);bottom:clamp(16px,2.6vw,28px);z-index:3;background:var(--surface);color:var(--ink);border-radius:20px;padding:16px;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:12px;align-items:end}
+.search .btn{min-height:46px}
+
+.trust{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:20px}
+.trust div{display:flex;gap:12px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.trust svg{flex:none;color:var(--accent)}
+.trust b{display:block;font-size:14px}.trust span{font-size:12.5px;color:var(--muted)}
+
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.cat{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;transition:transform .15s,border-color .15s,box-shadow .15s}
+.cat:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:var(--shadow)}
+.cat b{font-size:15px}.cat span{font-size:12.5px;color:var(--muted)}
+.cat svg{width:100%;height:46px;margin-bottom:4px}
+
+/* araç kartları */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+#featured{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+.car{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;min-width:0;transition:transform .2s,box-shadow .2s}
+.car:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.car .stage{background:linear-gradient(170deg,var(--stage),var(--stage-2));padding:20px 14px 6px;position:relative}
+.car .stage svg{display:block;width:100%;height:auto}
+.car .stage .chip{position:absolute;top:12px;left:12px;background:color-mix(in srgb,var(--surface) 88%,transparent)}
+.car .stage .chip.ok{color:var(--good)}.car .stage .chip.no{color:var(--bad)}
+.car .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.car h3{font-size:1.15rem}
+.car .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.rate{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.rate b{color:var(--ink)} .rate svg{color:#f5a524}
+.spec{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.spec span{display:inline-flex;align-items:center;gap:5px}
+.free{font-size:12.5px;color:var(--good);font-weight:700;display:flex;align-items:center;gap:5px}
+.car .foot{display:flex;justify-content:space-between;align-items:end;margin-top:auto;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+.price{font:800 1.5rem var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.price small{font:600 12px var(--f-body);color:var(--muted);margin-left:2px}
+.tot{font-size:12px;color:var(--muted);margin-top:2px}
+.car.off .stage svg{opacity:.4}
+
+.layout{display:grid;grid-template-columns:270px 1fr;gap:24px;align-items:start}
+.filters{display:flex;flex-direction:column;gap:18px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 80px)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;transition:border-color .15s,background .15s}
+.pill:hover{border-color:var(--ink)}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* detay */
+.detail{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;align-items:start}
+.detail .stage{border-radius:var(--r);background:linear-gradient(170deg,var(--stage),var(--stage-2));padding:36px 22px 10px}
+.detail .stage svg{width:100%;height:auto;display:block}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;margin-top:16px}
+.specs div{background:var(--surface);padding:12px 14px}
+.specs dt{font:700 12px var(--f-body);color:var(--muted)}
+.specs dd{margin:2px 0 0;font-weight:700}
+.sum{display:flex;flex-direction:column;gap:8px;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px}
+.sum div{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
+.sum .total{font:800 1.4rem var(--f-display)}
+
+/* adımlar */
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;padding:0;list-style:none}
+.steps li{display:flex;align-items:center;gap:8px;padding:7px 16px 7px 7px;border:1px solid var(--line);border-radius:999px;font-weight:700;color:var(--muted);background:var(--surface);font-size:14px}
+.steps li b{font:800 12px var(--f-body);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2)}
+.steps li[aria-current="step"]{color:var(--ink);border-color:var(--ink)}
+.steps li[aria-current="step"] b{background:var(--ink);color:var(--bg)}
+.steps li.done b{background:var(--good);color:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.flow{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:transform .15s,border-color .15s}
+.flow:hover{transform:translateY(-2px)}
+.flow[aria-pressed="true"].cl{border-color:var(--classic);background:var(--classic-soft)}
+.flow[aria-pressed="true"].zk{border-color:var(--accent);background:var(--accent-soft)}
+.flow h3{font-size:1.25rem}
+.flow ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px}
+.flow[disabled]{opacity:.5;cursor:not-allowed}
+
+pre{margin:0;font:400 12.5px/1.55 var(--f-mono);background:var(--surface-2);border-radius:var(--r-sm);padding:12px;overflow-x:auto;white-space:pre}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font:400 13px/1.45 var(--f-mono)}
+.log li{display:grid;grid-template-columns:auto 1fr;gap:10px}
+.log time{color:var(--muted)}
+.verdict{display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:var(--r);font-weight:700}
+.verdict.ok{background:var(--good-soft);color:var(--good)}
+.verdict.no{background:var(--bad-soft);color:var(--bad)}
+.verdict h3{color:inherit;font-size:1.4rem}
+.banner{border:1px dashed var(--classic);background:var(--classic-soft);color:var(--classic);border-radius:var(--r-sm);padding:10px 14px;font-size:13.5px;font-weight:600}
+.banner.zk{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cols>*{min-width:0}
+
+/* tablo */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 12.5px var(--f-body);color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* analitik */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.bars{display:flex;flex-direction:column;gap:14px}
+.bar-row{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center}
+.bar-row .lab{font-size:13px;color:var(--muted)}
+.track{display:flex;flex-direction:column;gap:4px}
+.b{height:28px;border-radius:8px;display:flex;align-items:center;padding-left:10px;font:600 12px var(--f-mono);min-width:fit-content;white-space:nowrap}
+.b.cl{background:var(--classic);color:#fff}.b.zk{background:var(--accent);color:var(--accent-ink)}
+:root[data-theme="dark"] .b.cl{color:#2a1306}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .b.cl{color:#2a1306}}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+textarea{width:100%;min-height:140px;font:400 12px/1.5 var(--f-mono)}
+
+/* nasıl çalışır, gizlilik bandı, SSS */
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.how .panel{display:flex;flex-direction:column;gap:8px}
+.how .n{display:inline-block;align-self:flex-start;background:var(--accent-soft);color:var(--accent);padding:5px 11px;border-radius:999px;font-weight:800;font-size:12.5px}
+.privband{margin-top:64px;border-radius:24px;background:linear-gradient(160deg,var(--hero-a),var(--hero-b));color:#fff;padding:clamp(24px,4vw,44px);display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center}
+.privband h2{color:#fff}.privband p{color:#c3d3e8;margin-top:12px;max-width:48ch}
+.compare{display:grid;gap:10px}
+.compare div{background:rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;font-size:14px}
+.compare b{display:block;margin-bottom:4px}
+.compare .bad b{color:#ffb089}.compare .good b{color:#7ff0e0}
+.faq{display:grid;gap:10px}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 18px}
+.faq summary{cursor:pointer;font-weight:700;padding:14px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::after{content:"+";font-size:20px;color:var(--muted)}
+.faq details[open] summary::after{content:"–"}
+.faq details p{color:var(--muted);padding-bottom:16px;max-width:70ch}
+footer{background:var(--hero-a);color:#b9c8dc;margin-top:56px;padding-block:44px 28px;font-size:13.5px}
+footer .cols4{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:28px}
+footer b{display:block;color:#fff;margin-bottom:10px;font-size:14px}
+footer a{display:block;text-decoration:none;padding:3px 0;color:#b9c8dc}footer a:hover{color:#fff}
+footer .fine{margin-top:32px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);font-size:12.5px;color:#8ea3bd}
+
+@media (max-width:980px){.search{grid-template-columns:1fr 1fr;position:relative;left:auto;right:auto;bottom:auto;margin-top:28px}.hero{padding-bottom:22px}.hero-car{position:relative;right:auto;bottom:auto;width:100%;margin:18px 0 -6px}.search .field.full{grid-column:1/-1}}
+@media (max-width:860px){.detail,.layout,.two,.cols,.privband{grid-template-columns:1fr}.filters{position:static}.bar-row{grid-template-columns:1fr}footer .cols4{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){nav{width:100%;overflow-x:auto;flex-wrap:nowrap}nav a{white-space:nowrap}.panel{padding:18px}}
+@media (max-width:480px){.form-grid,.search{grid-template-columns:1fr}.specs{grid-template-columns:1fr}footer .cols4{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){.view{animation:in .25s ease}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
+</style>
+
+<div class="demo-bar"><div class="wrap"><span>Eğitim prototipi · Data Privacy dersi</span><span>Sentetik veri · gerçek kimlik, ödeme veya e-Devlet bağlantısı yok</span></div></div>
+<header class="top" id="rentTop"><div class="wrap bar">
+  <a class="brand" href="#anasayfa" aria-label="PrivacyDrive ana sayfa"><span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><b>PrivacyDrive</b></a>
+  <nav aria-label="Ana menü">
+    <a href="#anasayfa" data-nav="anasayfa">Ana sayfa</a>
+    <a href="#araclar" data-nav="araclar">Araçlar</a>
+    <a href="#gizlilik" data-nav="gizlilik">Gizlilik</a>
+    <a href="#analitik" data-nav="analitik">Analitik</a>
+    <a href="http://localhost:4000" target="_blank" rel="noopener">KimlikKasası ↗</a>
+    <a href="#hesap" data-nav="hesap" id="navAcc">Hesap oluştur</a>
+    <a href="#hesap" id="navOut" data-act="logout" hidden>Çıkış yap</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+
+<!-- ANA SAYFA -->
+<section class="view" id="v-anasayfa">
+  <div class="hero">
+    <div class="hero-copy">
+      <h1>Doğum tarihini vermeden araç kirala.</h1>
+      <p class="lead">Kiralama şirketinin bilmesi gereken tek şey şartları sağlayıp sağlamadığın: 25 yaş, en az 2 yıllık ehliyet ve uygun ehliyet sınıfı. Bilgilerini KimlikKasası'nda tutarsın, PrivacyDrive yalnızca üç “evet” veya “hayır” cevabı alır.</p>
+      <div class="tags"><span class="chip zk">Gerçek zk-SNARK (Groth16)</span><span class="chip">Ücretsiz iptal</span><span class="chip">Sentetik demo verisi</span></div>
+    </div>
+    <div class="hero-car" id="heroCar" aria-hidden="true"></div>
+    <div class="road"></div>
+    <form class="search" id="heroForm">
+      <div class="field"><label for="hCity">Alış noktası</label>
+        <select id="hCity"><option>Kayseri Erkilet Havalimanı</option><option>Kayseri Şehir Merkezi</option><option>Ankara Esenboğa</option><option>İstanbul Havalimanı</option><option>İzmir Adnan Menderes</option></select></div>
+      <div class="field"><label for="hStart">Alış tarihi</label><input type="date" id="hStart"></div>
+      <div class="field"><label for="hEnd">Teslim tarihi</label><input type="date" id="hEnd"></div>
+      <div class="field"><label for="hType">Araç tipi</label>
+        <select id="hType"><option value="">Tümü</option><option>Ekonomi</option><option>Kompakt</option><option>SUV</option><option>Elektrik</option><option>Premium</option><option>Van</option></select></div>
+      <button class="btn primary" type="submit">Araçları göster</button>
+    </form>
+  </div>
+
+  <div class="trust">
+    <div><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span><b>Yaş kontrolü gizli</b><span>Doğum tarihi şirkete gitmez</span></span></div>
+    <div><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg><span><b>Ücretsiz iptal</b><span>Alıştan 24 saat öncesine kadar</span></span></div>
+    <div><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg><span><b>Sabit fiyat</b><span>Gizli ücret yok, kasko seçilebilir</span></span></div>
+    <div><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>5 teslim noktası</b><span>Havalimanı ve şehir merkezleri</span></span></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><h2>Kategoriye göre seç</h2></div>
+    <div class="cats" id="cats"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><h2>Öne çıkan araçlar</h2><a class="btn ghost" href="#araclar">Tüm araçlar</a></div>
+    <div class="grid" id="featured"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><h2>Üç adımda kirala</h2><p>Rezervasyon sırasında yalnızca sürücü uygunluğu sorulur. Hangi bilginin nereye gittiğini her adımda görürsün.</p></div>
+    <div class="how">
+      <div class="panel"><span class="n">Adım 1</span><h3>Aracı seç</h3><p class="muted small">Tarihi ve teslim noktasını belirle, filtrele, günlük ücreti ve toplamı gör.</p></div>
+      <div class="panel"><span class="n">Adım 2</span><h3>KimlikKasası ile bağlan</h3><p class="muted small">Hesabını bir kez bağlarsın. Doğum ve ehliyet bilgilerin cüzdanında imzalı bir kart olarak durur.</p></div>
+      <div class="panel"><span class="n">Adım 3</span><h3>Uygunluğunu kanıtla</h3><p class="muted small">Cüzdan tek bir kanıt üretir, doğrulayıcı servis “yaş, ehliyet süresi, ehliyet sınıfı: evet/hayır” der.</p></div>
+    </div>
+  </div>
+
+  <div class="privband">
+    <div><h2>Klasik kiralamada kimlik bilgini verirsin. Burada vermiyorsun.</h2><p>İki yöntemi aynı hesapla yan yana dene ve kiralama sunucusunun veritabanında neyin kaldığını kendin gör.</p><div style="margin-top:18px"><a class="btn primary" href="#gizlilik">Karşılaştırmayı aç</a></div></div>
+    <div class="compare">
+      <div class="bad"><b>Klasik yöntem</b>Ad, T.C. kimlik no ve doğum tarihi kiralama sunucusuna gider ve rezervasyonla saklanır.</div>
+      <div class="good"><b>PrivacyDrive (ZKP)</b>Yalnızca üç <span class="mono">true/false</span> (age_over_25, license_2y, class_ok) saklanır. Doğum tarihi, ehliyet tarihi ve sınıfı KimlikKasası'nda kalır.</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><h2>Sık sorulanlar</h2></div>
+    <div class="faq">
+      <details><summary>Neden doğum ve ehliyet bilgilerimi vermiyorum?</summary><p>Kiralama şirketi yalnızca sürücünün 25 yaş veya üzeri olup olmadığını, ehliyetinin en az 2 yıllık olup olmadığını ve sınıfının yeterli olup olmadığını bilmek zorunda. Bu üç cevap, tarihleri ve sınıfı açıklamadan kriptografik bir kanıtla doğrulanır.</p></details>
+      <details><summary>Kanıt nasıl üretiliyor?</summary><p>Kimlik sağlayıcının imzaladığı kart tarayıcındaki cüzdanda durur. Cüzdan, kartı göstermeden “bu kart geçerli, sahibi 25 yaşını doldurdu, ehliyeti en az 2 yıllık ve sınıfı uygun” kanıtını yaklaşık bir saniyede üretir.</p></details>
+      <details><summary>Rezervasyonu iptal edebilir miyim?</summary><p>Evet. Bu demo ödeme almaz ve gerçek rezervasyon oluşturmaz; iptal koşulu yalnızca arayüz örneğidir.</p></details>
+      <details><summary>Bu site gerçek mi?</summary><p>Hayır. Data Privacy dersi için hazırlanmış bir prototiptir. Araçlar, fiyatlar ve kişiler uydurmadır, KimlikKasası bir e-Devlet servisi değildir.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ARAÇLAR -->
+<section class="view" id="v-araclar" hidden>
+  <div class="sec-head" style="margin-top:0"><h2>Araçlar</h2><p id="listInfo" class="muted"></p></div>
+  <div class="layout">
+    <aside class="panel filters" aria-label="Filtreler">
+      <div class="field"><span class="lbl">Araç tipi</span><div class="pills" id="fType"></div></div>
+      <div class="field"><span class="lbl">Yakıt</span><div class="pills" id="fFuel"></div></div>
+      <div class="field"><label for="fPrice">Günlük en fazla: <span id="fPriceVal"></span></label><input type="range" id="fPrice" min="1000" max="4500" step="50" value="4500"></div>
+      <div class="field"><label for="fSort">Sıralama</label>
+        <select id="fSort"><option value="price-asc">Fiyat: düşükten yükseğe</option><option value="price-desc">Fiyat: yüksekten düşüğe</option><option value="year-desc">Model yılı: yeniden eskiye</option><option value="seats-desc">Koltuk sayısı</option></select></div>
+      <label style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font:500 14px var(--f-body);color:var(--ink)"><input type="checkbox" id="fAvail" checked> Yalnızca müsait araçlar</label>
+      <button class="btn ghost" id="fReset" type="button">Filtreleri sıfırla</button>
+    </aside>
+    <div class="grid" id="carGrid"></div>
+  </div>
+</section>
+
+<!-- DETAY -->
+<section class="view" id="v-arac" hidden><div id="detailBody"></div></section>
+
+<!-- REZERVASYON -->
+<section class="view" id="v-rezervasyon" hidden><div id="bookBody"></div></section>
+
+<!-- HESAP -->
+<section class="view" id="v-hesap" hidden><div id="accBody"></div></section>
+
+<!-- GİZLİLİK -->
+<section class="view" id="v-gizlilik" hidden>
+  <div class="sec-head" style="margin-top:0"><h2>Hangi veri nereye gider?</h2><p>İki akışın bu demodaki tasarımı. “Klasik” sütunu, form ve profil alanlarını olduğu gibi kaydeden tipik bir uygulamayı temsil eder; her klasik uygulama böyle çalışmaz.</p></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Alan</th><th>Klasik: kiralama API'sine gider</th><th>Klasik: kiralama DB'sinde saklanır</th><th>Gerçek ZKP: API'ye gider</th><th>Gerçek ZKP: DB'de saklanır</th></tr></thead>
+    <tbody id="privRows"></tbody></table></div>
+
+  <div class="cols sec">
+    <div class="panel"><h3>Google ile giriş ile ZKP aynı şey değildir</h3>
+      <p class="muted" style="margin-top:10px">OAuth, bir hesabın kimliğini ve izin verilen alanları iletir. ZKP ise gizli bir girdiyi açıklamadan bir önermeyi (ör. “25 yaş ve üzeri”, “ehliyet en az 2 yıllık”) kanıtlamayı hedefler. Biri güvensiz, diğeri güvenli diye karşılaştırmak doğru değildir; karşılaştırılacak olan alanların akışı, saklama politikası, loglar ve ölçülen maliyettir.</p>
+      <p class="muted" style="margin-top:10px">Bu demoda klasik akış, KimlikKasası onay ekranından geçip kiralama sunucusunun tam kaydı almasıdır; gerçek Google girişi değildir.</p></div>
+    <div class="panel"><h3>Sınırlamalar</h3>
+      <ul class="muted" style="margin:10px 0 0;padding-left:18px">
+        <li>ZKP akışı gerçek bir zk-SNARK'tır (Groth16): Circom devresi, snarkjs ile kanıt üretimi ve doğrulama. Doğum tarihi, ehliyet tarihi ve ehliyet sınıfı kanıtın açık değerlerinde yoktur; yalnızca üç sonuç biti vardır.</li>
+        <li>Kurulum (trusted setup) tek makinede, demo için yapıldı. Üretim için uygun değildir.</li>
+        <li>İmzalı kimlik kartı veri sağlayıcıya güveni gerektirir. Kartı başkasına veren biri onun adına kanıt üretebilir; devre kartı yalnızca hesap referansına bağlar.</li>
+        <li>KimlikKasası (4000), kiralama sitesi (3000) ve doğrulayıcı (5000) ayrı sunuculardır. Doğrulayıcı üçüncü bir servistir (port 5000): kanıtı cüzdan doğrudan ona gönderir, kiralama sunucusu yalnızca true/false cevabını alır. Cüzdan ise kiralama sitesiyle aynı tarayıcı kökeninde durur; gerçek bir sistemde ayrı bir uygulama olmalıdır. Bu yüzden kiralama sayfasının kodu kuramsal olarak cüzdanı okuyabilir.</li>
+                <li>Kaynak verinin doğruluğu, kullanıcıya bağlama, cihaz ve oturum güvenliği ayrıca ele alınmalıdır.</li>
+        <li>“Yüzde yüz güvenli” veya “hiçbir yerde veri tutulmuyor” iddiası yoktur. Veri sağlayıcı sentetik profilleri tutar.</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- ANALİTİK -->
+<section class="view" id="v-analitik" hidden>
+  <div class="sec-head" style="margin-top:0"><h2>Analitik</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn ghost" id="runClassic" type="button">Klasik: 100 tekrar</button><button class="btn primary" id="runZk10" type="button">ZKP: 10 tekrar</button><button class="btn ghost" id="runZk100" type="button">ZKP: 100 tekrar (~2 dk)</button><span class="small muted mono" id="batchInfo"></span></div></div>
+  <div class="banner zk" style="margin-bottom:16px"><b>Not:</b> ZKP ölçümleri gerçek Groth16 kanıt üretimi (kullanıcı cihazı) ve doğrulamasıdır; kanıt üretimi bu tarayıcıda tek iş parçacığıyla, doğrulama ayrı Doğrulayıcı servisinde (Node + snarkjs) çalışır. Ölçüm, gerçek kişilerin verisini değil, tarayıcıda üretilen bir test imzalayıcısını ve 20 sentetik kaydı kullanır. Klasik akışta ağ ve kriptografi yoktur, bu yüzden çok daha hızlıdır. Karşılaştırma, gizlilik kazancının işlem maliyetini gösterir. Süreler bu cihazın hızına bağlıdır.</div>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="cols sec">
+    <div class="panel"><h3>Doğrulama süresi (ms)</h3><p class="muted small" style="margin:6px 0 16px">Medyan ve p95 · ZKP için kanıt üretimi ve doğrulama ayrı</p><div class="bars" id="chartTime"></div></div>
+    <div class="panel"><h3>Veri ifşası</h3><p class="muted small" style="margin:6px 0 16px">Kiralama uygulamasına ulaşan kişisel/nitelik alanı ve saklanan hassas alan sayısı</p><div class="bars" id="chartDisc"></div></div>
+  </div>
+  <div class="legend" style="margin-top:14px"><span><i style="background:var(--classic)"></i>Klasik demo</span><span><i style="background:var(--accent)"></i>Gerçek ZKP (Groth16)</span></div>
+
+  <div class="sec">
+    <h3>Alan tanımları</h3>
+    <p class="muted small" style="margin-top:6px;max-width:75ch">Açıklanan alan: kiralama API'sine ulaşan kişisel veya nitelik alanı (ad soyad, e-posta, doğum tarihi, kimlik no, ehliyet sınıfı, ehliyet tarihi, hesap kimliği; ZKP'de age_over_25, license_2y, class_ok). Teknik alanlar (nonce, proof ve herkese açık değerler) sayılmaz. Hassas alan: doğum tarihi, kimlik numarası, ehliyet sınıfı ve ehliyet tarihi.</p>
+  </div>
+  <div class="sec">
+    <div class="sec-head"><h3>Anonim metrik kaydı (CSV)</h3><button class="btn ghost" id="copyCsv" type="button">Kopyala</button></div>
+    <textarea id="csv" readonly aria-label="CSV çıktısı"></textarea>
+  </div>
+</section>
+
+</main>
+<footer><div class="wrap">
+  <div class="cols4">
+    <div><b>PrivacyDrive</b><p>Yaşını kanıtla, doğum tarihini verme. Data Privacy dersi için hazırlanmış, ZKP tabanlı bir kiralama prototipi.</p></div>
+    <div><b>Kiralama</b><a href="#araclar">Tüm araçlar</a><a href="#hesap">Hesabım</a><a href="#gizlilik">Gizlilik karşılaştırma</a></div>
+    <div><b>Teknik</b><a href="#analitik">Analitik</a><a href="http://localhost:4000" target="_blank" rel="noopener">KimlikKasası</a></div>
+    <div><b>Demo</b><p>Sentetik veri. Gerçek kimlik, ödeme veya e-Devlet bağlantısı yoktur.</p></div>
+  </div>
+  <div class="fine">© PrivacyDrive eğitim prototipi. Araç görselleri çizimdir, fiyatlar örnektir, rezervasyon gerçek değildir.</div>
+</div></footer>
+
+<script src="pdzk.bundle.js"></script>
+<script>
+/* ---------- yardımcılar ---------- */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const TL=n=>Math.round(n).toLocaleString('tr-TR')+' ₺';
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const today=new Date();today.setHours(0,0,0,0);
+const fmtDate=s=>new Date(s+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const days=(a,b)=>Math.max(1,Math.round((new Date(b)-new Date(a))/864e5));
+function ageOn(birthISO,on){const b=new Date(birthISO+'T00:00:00');let a=on.getFullYear()-b.getFullYear();const m=on.getMonth()-b.getMonth();if(m<0||(m===0&&on.getDate()<b.getDate()))a--;return a}
+const uid=()=>Array.from(crypto.getRandomValues(new Uint8Array(6)),b=>b.toString(16).padStart(2,'0')).join('');
+const now=()=>performance.now();
+const ymd=x=>+String(x).replace(/-/g,'');
+const median=a=>{const s=[...a].sort((x,y)=>x-y);const m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const p95=a=>{const s=[...a].sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.ceil(s.length*.95)-1)]};
+const fmtMs=v=>v<0.001?'<0,001':v.toLocaleString('tr-TR',{minimumFractionDigits:3,maximumFractionDigits:3});
+
+/* ---------- veri ---------- */
+const VEHICLES=[
+ {id:1,brand:'Fiat',model:'Egea 1.4',year:2025,type:'Ekonomi',fuel:'Benzin',gear:'Manuel',seats:5,bags:3,daily:1450,ok:true,shape:'sedan',color:'#8c9aa5'},
+ {id:2,brand:'Renault',model:'Clio',year:2025,type:'Ekonomi',fuel:'Benzin',gear:'Otomatik',seats:5,bags:2,daily:1380,ok:true,shape:'hatch',color:'#c2553d'},
+ {id:3,brand:'Toyota',model:'Corolla Hybrid',year:2025,type:'Kompakt',fuel:'Hibrit',gear:'Otomatik',seats:5,bags:3,daily:1950,ok:true,shape:'sedan',color:'#e6e9ea'},
+ {id:4,brand:'Skoda',model:'Octavia',year:2025,type:'Kompakt',fuel:'Dizel',gear:'Manuel',seats:5,bags:4,daily:1750,ok:true,shape:'sedan',color:'#3f5f4f'},
+ {id:5,brand:'Hyundai',model:'Tucson',year:2025,type:'SUV',fuel:'Hibrit',gear:'Otomatik',seats:5,bags:4,daily:2780,ok:true,shape:'suv',color:'#37506b'},
+ {id:6,brand:'Volkswagen',model:'Tiguan',year:2024,type:'SUV',fuel:'Dizel',gear:'Otomatik',seats:5,bags:4,daily:2950,ok:false,shape:'suv',color:'#242d33'},
+ {id:7,brand:'Togg',model:'T10X',year:2025,type:'Elektrik',fuel:'Elektrik',gear:'Otomatik',seats:5,bags:4,daily:3250,ok:true,shape:'suv',color:'#8ea7b8'},
+ {id:8,brand:'Renault',model:'Megane E-Tech',year:2025,type:'Elektrik',fuel:'Elektrik',gear:'Otomatik',seats:5,bags:3,daily:2650,ok:true,shape:'hatch',color:'#b99a4a'},
+ {id:9,brand:'BMW',model:'520i',year:2025,type:'Premium',fuel:'Benzin',gear:'Otomatik',seats:5,bags:4,daily:4200,ok:true,shape:'sedan',color:'#1c2530'},
+ {id:10,brand:'Mercedes-Benz',model:'Vito Tourer',year:2024,type:'Van',fuel:'Dizel',gear:'Otomatik',seats:8,bags:6,daily:3600,ok:true,shape:'van',color:'#d5d8da'}
+];
+// Uygunluk koşulları: alış tarihinde 25+ yaş, ehliyet en az 2 yıllık, ehliyet sınıfı B veya üzeri
+const CLAIMS=[
+ {k:'age_over_25',l:'25 yaş ve üzeri',hid:'Doğum tarihi'},
+ {k:'license_2y',l:'Ehliyet en az 2 yıllık',hid:'Ehliyet alım tarihi'},
+ {k:'class_ok',l:'Ehliyet sınıfı uygun (B ve üzeri)',hid:'Ehliyet sınıfı'}];
+const allOk=c=>!!(c&&c.age_over_25&&c.license_2y&&c.class_ok);
+const failedList=c=>CLAIMS.filter(x=>!c[x.k]).map(x=>x.l);
+function claimsFromRecord(rec,asOfIso){const on=new Date(asOfIso+'T00:00:00');
+ return {age_over_25:ageOn(rec.birth,on)>=25,license_2y:!!rec.lic&&ageOn(rec.lic,on)>=2,class_ok:rec.cls==='B'||rec.cls==='C'}}
+const BIRTH=(y,off=0)=>iso(addDays(new Date(today.getFullYear()-y,today.getMonth(),today.getDate()),off));
+// ============ DEMO VERİ SAĞLAYICI (ayrı servis gibi davranır) ============
+// Kiralama kodu bu modüldeki kayıtlara doğrudan erişmez; yalnızca link/prove/fullRecord sorgularını kullanır.
+const norm=x=>x.toLocaleLowerCase('tr').replace(/\s+/g,' ').trim();
+const SEED=[['Deniz Aksoy',26,-40],['Kaan Yıldız',23,-100],['Ece Demir',25,0],['Mert Kaya',25,1],['Zeynep Arslan',24,-200],['Burak Çelik',31,-12],['Selin Öztürk',28,-300],['Emre Şahin',19,-30],['Elif Koç',22,-150],['Can Aydın',35,-80],['Defne Polat',27,-10],['Ozan Güneş',45,-220],['Ayşe Korkmaz',52,-5],['Barış Erdoğan',29,-260],['Melis Tekin',24,-20],['Tolga Bulut',38,-90],['Ceren Yavuz',21,-7],['Onur Kılıç',33,-180],['Işıl Özkan',30,-330],['Yiğit Acar',25,-1]];
+// YALNIZCA ÖLÇÜM: analitik sayfası için tarayıcıda üretilen test imzalayıcısı ve 20 sentetik kayıt.
+// Gerçek KimlikKasası verisiyle ilgisi yoktur.
+const TestIssuer=(()=>{
+  const LICS=[[null,0],['B',1],['A2',8],['B',6],['C',9]];   // [sınıf, kaç yıl önce]; i%5'e göre dönüşümlü
+  const recs=SEED.map(([name,y,off],i)=>{const [cls,ago]=LICS[i%5],yy=Math.max(0,Math.min(ago,y-18));
+    return {name,birth:BIRTH(y,off),cls,lic:cls?iso(addDays(new Date(today.getFullYear()-yy,today.getMonth(),today.getDate()),-30)):null,subject:'s_'+h53('pd|'+i).slice(0,8)}});
+  let key=null;const find=s=>recs.find(x=>x.subject===s);
+  return {async init(){if(key)return;await PDZK.init();key=PDZK.newIssuerKey()},publicKey:()=>key.pub,
+    subjects:()=>recs.map(r=>r.subject),truth:(s,asOf)=>claimsFromRecord(find(s),asOf),
+    record:s=>({...find(s)}),issue:s=>{const r=find(s);return PDZK.issueCredential(key.prvHex,ymd(r.birth),r.lic?ymd(r.lic):0,r.cls,s)}}
+})();
+const FIELDS=[
+ {k:'ad_soyad',l:'Ad soyad',sens:false},{k:'e_posta',l:'E-posta',sens:false},
+ {k:'dogum_tarihi',l:'Doğum tarihi',sens:true},{k:'kimlik_no',l:'Kimlik numarası (sentetik)',sens:true},
+ {k:'ehliyet_sinifi',l:'Ehliyet sınıfı',sens:true},{k:'ehliyet_tarihi',l:'Ehliyet alım tarihi',sens:true},
+ {k:'hesap_id',l:'Hesap kimliği',sens:false}
+];
+const SENS=FIELDS.filter(f=>f.sens).length;
+
+/* ---------- ZK servisleri ---------- */
+function h53(str,seed=0){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,c;i<str.length;i++){c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
+ h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+ return(4294967296*(2097151&h2)+(h1>>>0)).toString(16).padStart(14,'0')}
+
+// Sunucu çağrıları
+const API=async(u,b)=>{const r=await fetch(u,b===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('Sunucu hatası ('+r.status+')'));return j};
+let CFGP=null;const cfg=()=>CFGP||(CFGP=API('/api/config').catch(e=>{CFGP=null;throw e}));
+
+// Devre dosyaları (wasm, zkey) ilk kanıtta yüklenir.
+const ZK=(()=>{let p=null;const ok=r=>{if(!r.ok)throw new Error('Devre dosyası yüklenemedi ('+r.status+')');return r};
+  return {assets(){return p||(p=(async()=>{await PDZK.useSingleThread();
+    const [w,z]=await Promise.all([fetch('zk/drive_proof.wasm').then(ok),fetch('zk/drive_final.zkey').then(ok)]);
+    return {wasm:new Uint8Array(await w.arrayBuffer()),zkey:new Uint8Array(await z.arrayBuffer())}})().catch(e=>{p=null;throw e}))}}})();
+
+// Kullanıcı cüzdanı: KimlikKasası'ndan alınan kart burada durur, kanıt yerelde üretilir.
+const Wallet=(()=>{const KEY='pd_wallet3';let mem={};try{mem=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(_){}
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(mem))}catch(_){}};
+  const prove=async(cred,nonceHex,asOfYmd,issuer)=>{const a=await ZK.assets();return PDZK.proveClaims(PDZK.snarkjs,a.wasm,a.zkey,cred,issuer,asOfYmd,nonceHex)};
+  return {receive(c,issuer){mem[c.subject]={cred:c,issuer};save()},has:s=>!!mem[s],forget(s){delete mem[s];save()},
+    proveClaims(subject,nonceHex,asOfYmd){const m=mem[subject];if(!m)return Promise.reject(new Error('Cüzdanda bu hesap için kimlik kartı yok'));return prove(m.cred,nonceHex,asOfYmd,m.issuer)},
+    proveWith:prove}})();
+
+// Saldırı denemesi: sonuç bitlerinden biri (i) elle çevrilir
+function tamperRequest(p,i=0){const ps=[...p.publicSignals];ps[i]=ps[i]==='1'?'0':'1';return {...p,publicSignals:ps}}
+
+const METRICS=[];
+function pushMetric(m){METRICS.push({event_id:'ev_'+uid(),prove_ms:'',verify_ms:'',...m})}
+function failFlow(flow,reason){return {flow,eligible:false,ok:false,ms:0,proveMs:0,verifyMs:0,log:[{ms:0,t:reason||'İşlem başarısız'}],request:{},response:{error:reason||'Hata'},disclosed:[],stored:[],record:{}}}
+
+// Verifier'a doğrudan istek (cüzdan → doğrulayıcı). Kiralama sunucusu bu isteği görmez.
+async function toVerifier(path,body){const c=await cfg();const r=await fetch(c.verifierUrl+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok&&!j.error)throw new Error('Doğrulayıcı hatası ('+r.status+')');return j}
+
+// Gerçek ZKP akışı: oturum (kiralama→doğrulayıcı) → kanıt (tarayıcı cüzdanı) → kanıt doğrulayıcıya → cevap (doğrulayıcı→kiralama)
+async function runZkFlow(profile,asOf,vehicleId){
+  const t0=now(),log=[],L=t=>log.push({ms:now()-t0,t});
+  let st;try{st=await API('/api/verify/start',{account_id:profile.id,asOf:ymd(asOf)})}catch(e){return failFlow('zkp',e.message)}
+  L('Kiralama sunucusu doğrulayıcıda oturum açtı ve tek kullanımlık nonce aldı');
+  const tp=now();let pr;
+  try{pr=await Wallet.proveClaims(profile.subject,st.nonce,ymd(asOf))}catch(e){return failFlow('zkp',String(e&&e.message||e))}
+  const proveMs=now()-tp;
+  L('Cüzdan kanıtı tarayıcıda üretti (Groth16, '+Math.round(proveMs)+' ms). KimlikKasası\'na istek gitmedi');
+  const proofSent={proof:pr.proof,publicSignals:pr.publicSignals,nonce:st.nonce};
+  let v;try{v=await toVerifier('/api/sessions/'+st.session_id+'/proof',{proof:pr.proof,publicSignals:pr.publicSignals})}catch(e){return failFlow('zkp',e.message)}
+  L(v.accepted?'Cüzdan kanıtı doğrudan doğrulayıcıya gönderdi, kabul edildi ('+v.verify_ms.toFixed(0)+' ms). Kiralama sunucusu kanıtı görmedi':'Doğrulayıcı kanıtı reddetti: '+v.error);
+  if(!v.accepted)return {flow:'zkp',eligible:false,ok:false,ms:now()-t0,proveMs,verifyMs:v.verify_ms||0,log,request:{account_id:profile.id,session_id:st.session_id},response:{error:v.error},disclosed:[],stored:[],record:{durum:'kayıt oluşturulmadı'},proofSent,sessionId:st.session_id};
+  let d;try{d=await API('/api/verify/finish',{account_id:profile.id,session_id:st.session_id,vehicle_id:vehicleId})}catch(e){return failFlow('zkp',e.message)}
+  const response=d.result,ok=response.error===undefined,eligible=!!(ok&&allOk(response));
+  L(ok?'Kiralama sunucusu doğrulayıcıdan yalnızca üç true/false aldı':'Doğrulayıcı sonuç vermedi: '+response.error);
+  return {flow:'zkp',eligible,ok,ms:now()-t0,proveMs,verifyMs:v.verify_ms,log,request:{account_id:profile.id,session_id:st.session_id},response,disclosed:CLAIMS.map(c=>c.k),stored:['eligibility_result',...CLAIMS.map(c=>c.k)],record:d.record||{durum:'kayıt oluşturulmadı'},proofSent,sessionId:st.session_id};
+}
+
+// KimlikKasası onay ekranına yönlendir; dönüşte (handleReturn) devam edilir
+const snap=()=>({selected:S.selected,start:S.start,end:S.end,ins:S.ins,city:S.city,returnTo:S.returnTo});
+async function startConsent(mode,pending){
+  const c=await cfg();
+  try{sessionStorage.setItem('pd_pending',JSON.stringify(pending))}catch(_){}
+  location.href=`${c.providerUrl}/onay?client_id=${encodeURIComponent(c.clientId)}&redirect_uri=${encodeURIComponent(location.origin+'/')}&mode=${mode}`;
+}
+async function handleReturn(){
+  const q=new URLSearchParams(location.search);if(!q.has('code')&&!q.has('error'))return;
+  history.replaceState(null,'',location.pathname);
+  let p=null;try{p=JSON.parse(sessionStorage.getItem('pd_pending')||'null');sessionStorage.removeItem('pd_pending')}catch(_){}
+  if(!p){S.flash={bad:true,t:'Oturum bilgisi bulunamadı. İşlemi yeniden başlatın.'};location.hash='hesap';return}
+  Object.assign(S,p.S);const inBook=p.kind==='classic'||(p.S.returnTo&&S.selected);
+  if(q.get('error')){S.flash={bad:true,t:'KimlikKasası\'nda izin verilmedi. Hiçbir bilgi paylaşılmadı.'};if(p.kind==='classic'){S.book={step:2,flow:null,result:null}}location.hash=inBook?'rezervasyon':'hesap';return}
+  const code=q.get('code'),c=await cfg();
+  if(p.kind==='account'){
+    const r=await fetch(c.providerUrl+'/api/oauth/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:c.clientId,code})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error||'KimlikKasası reddetti');
+    if(d.issuer.Ax!==c.issuerPub.Ax||d.issuer.Ay!==c.issuerPub.Ay)throw new Error('Kimlik kartı güvenilen sağlayıcıdan gelmiyor');
+    Wallet.receive(d.credential,d.issuer);
+    const {account}=await API('/api/accounts',{name:p.name,email:p.email,subject:d.subject});
+    S.account={id:account.id,name:account.ad_soyad,email:account.e_posta,subject:d.subject};S.prefill=null;saveAccount();
+    if(inBook){S.book={step:2,flow:null,result:null};location.hash='rezervasyon'}else location.hash='hesap';
+  }else{
+    S.book={step:2,flow:'classic',result:null,busy:true};location.hash='rezervasyon';
+    const t0=now();let R;
+    try{
+      const d=await API('/api/classic/finish',{code,account_id:S.account.id,asOf:S.start,vehicle_id:S.selected});
+      R={flow:'classic',eligible:allOk(d.response),ok:true,ms:d.ms,proveMs:0,verifyMs:0,request:d.request,response:d.response,disclosed:FIELDS.map(f=>f.k),stored:FIELDS.map(f=>f.k),record:d.record,
+        log:[{ms:0,t:'Kullanıcı KimlikKasası\'nda klasik paylaşıma onay verdi'},{ms:0,t:'Kiralama sunucusu, gizli anahtarıyla KimlikKasası\'ndan tam kaydı aldı'},{ms:d.ms,t:'Yaş, ehliyet süresi ve sınıf kiralama sunucusunda hesaplandı ve alanlar rezervasyonla saklandı (demo politikası)'}]};
+    }catch(e){R=failFlow('classic',e.message)}
+    S.book={step:3,flow:'classic',result:R,busy:false};
+    pushMetric({flow_type:'classic',duration_ms:+R.ms.toFixed(4),success:R.ok,disclosed_field_count:R.disclosed.length});
+  }
+}
+/* ---------- görseller (genel araç çizimleri) ---------- */
+let SVGN=0;
+function shade(hex,p){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=p<0?0:255,a=Math.abs(p);
+  r=Math.round((t-r)*a+r);g=Math.round((t-g)*a+g);b=Math.round((t-b)*a+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1)}
+const SHAPES={
+ hatch:{body:'M30 104 L30 86 Q30 78 42 76 L92 68 Q110 42 152 42 L206 42 Q236 44 250 68 L282 74 Q294 78 294 92 L294 104 Z',glass:'M98 66 Q114 48 150 48 L202 48 Q226 50 238 66 Z',w:[86,242],pil:[160],seams:[116,214],fx:294,rx:30,ly:82},
+ sedan:{body:'M24 104 L24 88 Q24 80 36 78 L100 68 Q130 44 170 44 L214 46 Q240 52 262 72 L294 78 Q302 82 302 94 L302 104 Z',glass:'M108 66 Q134 50 170 50 L210 52 Q232 56 250 68 Z',w:[84,246],pil:[178],seams:[122,236],fx:302,rx:24,ly:84},
+ suv:{body:'M26 106 L26 82 Q26 72 38 70 L84 64 Q96 34 140 32 L226 32 Q252 34 264 62 L288 70 Q298 74 298 90 L298 106 Z',glass:'M92 62 Q104 40 140 38 L224 38 Q244 40 254 60 Z',w:[86,242],pil:[172],seams:[108,252],fx:298,rx:26,ly:78},
+ van:{body:'M26 106 L26 50 Q26 36 42 36 L232 36 Q250 36 260 52 L292 80 Q300 86 300 98 L300 106 Z',glass:'M40 46 L230 46 Q242 46 250 58 L266 76 L40 76 Z',w:[86,242],pil:[104,170],seams:[84,226],fx:300,rx:26,ly:86}
+};
+function carSVG(shape,color){const s=SHAPES[shape],id='c'+(++SVGN),hi=shade(color,.3),lo=shade(color,-.34);
+ const wheel=cx=>`<circle cx="${cx}" cy="106" r="26" fill="#0a0f14"/><circle cx="${cx}" cy="106" r="22" fill="#1b2129"/><circle cx="${cx}" cy="106" r="14" fill="url(#${id}r)"/>`+[0,72,144,216,288].map(a=>`<line x1="${cx}" y1="106" x2="${(cx+11.5*Math.cos(a*Math.PI/180)).toFixed(1)}" y2="${(106+11.5*Math.sin(a*Math.PI/180)).toFixed(1)}" stroke="#6f7b86" stroke-width="2.4" stroke-linecap="round"/>`).join('')+`<circle cx="${cx}" cy="106" r="3.8" fill="#46505a"/>`;
+ return `<svg viewBox="0 0 320 140" role="img" aria-label="Araç çizimi"><defs>
+ <linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hi}"/><stop offset=".5" stop-color="${color}"/><stop offset="1" stop-color="${lo}"/></linearGradient>
+ <linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8f4fa"/><stop offset="1" stop-color="#6a90a8"/></linearGradient>
+ <radialGradient id="${id}r"><stop offset="0" stop-color="#eef1f3"/><stop offset="1" stop-color="#8a95a0"/></radialGradient>
+ <radialGradient id="${id}s"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
+ <ellipse cx="160" cy="125" rx="152" ry="10" fill="url(#${id}s)"/>
+ <path d="${s.body}" fill="url(#${id}b)"/>
+ <path d="${s.glass}" fill="url(#${id}g)"/>
+ ${s.pil.map(x=>`<rect x="${x-2}" y="38" width="4" height="40" fill="${lo}" opacity=".9"/>`).join('')}
+ ${s.seams.map(x=>`<path d="M${x} 74 L${x} 98" stroke="${lo}" stroke-width="1.4" opacity=".7"/><rect x="${x+8}" y="82" width="12" height="3" rx="1.5" fill="${hi}"/>`).join('')}
+ <path d="M${s.rx+10} 80 L${s.fx-12} 80" stroke="#fff" stroke-opacity=".28" stroke-width="1.6" stroke-linecap="round"/>
+ <rect x="${s.rx}" y="98" width="${s.fx-s.rx}" height="7" fill="#000" opacity=".28"/>
+ <path d="M${s.fx-14} ${s.ly-4} L${s.fx} ${s.ly} L${s.fx} ${s.ly+7} L${s.fx-12} ${s.ly+6}Z" fill="#fff6cf"/>
+ <rect x="${s.rx}" y="${s.ly}" width="9" height="7" rx="2" fill="#d6283a"/>
+ ${s.w.map(wheel).join('')}</svg>`}
+
+/* ---------- durum ---------- */
+const S={type:'',fuel:'',maxPrice:4500,sort:'price-asc',avail:true,start:iso(addDays(today,3)),end:iso(addDays(today,6)),city:'Kayseri Erkilet Havalimanı',
+  selected:null,ins:false,account:null,returnTo:null,book:{step:1,flow:null,result:null}};
+try{const a=JSON.parse(localStorage.getItem('pd_account')||'null');if(a&&a.subject&&a.name&&a.id)S.account=a}catch(_){}
+function saveAccount(){try{if(S.account){localStorage.setItem('pd_account',JSON.stringify(S.account));localStorage.setItem('pd_known',JSON.stringify(S.account))}else localStorage.removeItem('pd_account')}catch(_){}}
+// Çıkış yapılmış ama cüzdanda kartı olan, bu cihazda bilinen hesap (hızlı giriş için)
+function knownAccount(){try{const a=JSON.parse(localStorage.getItem('pd_known')||'null');return a&&a.subject&&a.name&&a.id&&Wallet.has(a.subject)?a:null}catch(_){return null}}
+function updNav(){$('#navAcc').textContent=S.account?S.account.name.split(' ')[0]+' · Hesabım':'Hesap oluştur';$('#navOut').hidden=!S.account}
+function synthTc(){const a=crypto.getRandomValues(new Uint8Array(9));return '9'+Array.from(a,b=>b%10).join('')+'0'}
+
+/* ---------- hesap ---------- */
+function flashHtml(){const f=S.flash;S.flash=null;return f?`<div class="banner" style="margin-bottom:16px;${f.bad?'border-color:var(--bad);color:var(--bad);background:var(--bad-soft)':''}" role="alert">${esc(f.t)}</div>`:''}
+function renderAccount(){
+  const a=S.account;
+  if(!a){
+    $('#accBody').innerHTML=flashHtml()+`<div class="sec-head" style="margin-top:0"><h2>Hesap oluştur</h2><p>Doğum tarihi, ehliyet bilgisi veya kimlik numarası girmezsiniz. Kimliğinizi KimlikKasası'nda doğrularsınız; kiralama sitesi yalnızca üç true/false cevabı alır (25 yaş, ehliyet en az 2 yıllık, sınıf uygun).</p></div>
+    ${(()=>{const k=knownAccount();return k?`<div class="banner zk" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>Bu cihazda <b>${esc(k.name)}</b> hesabının kimlik kartı cüzdanda duruyor.</span><button class="btn primary" data-act="quickLogin" type="button">${esc(k.name.split(' ')[0])} olarak giriş yap</button></div>`:''})()}
+    <div class="cols"><form class="panel raised" id="accForm" novalidate>
+      <span class="chip cl">Kiralama sitesi</span>
+      <div class="form-grid" style="margin:12px 0 22px">
+        <div class="field full"><label for="aName">Ad soyad</label><input id="aName" required maxlength="60" autocomplete="off" placeholder="Görünen ad"></div>
+        <div class="field full"><label for="aMail">E-posta</label><input id="aMail" type="email" required maxlength="80" autocomplete="off" placeholder="demo@example.test"></div>
+        <div class="field full" id="accErr" role="alert" style="color:var(--bad);font-size:13px"></div>
+        <div class="field full"><button class="btn primary" type="submit">KimlikKasası ile bağla</button></div></div></form>
+    <div class="panel"><h3>Nasıl çalışır?</h3>
+      <ul class="muted" style="padding-left:18px;margin:10px 0 0"><li>KimlikKasası'nın (ayrı site, ayrı sunucu) giriş ve onay ekranına gidersiniz.</li><li>Orada T.C. kimlik numaranız ve şifrenizle giriş yapar, doğum ve ehliyet bilgilerinizi içeren imzalı kimlik kartı verilmesine izin verirsiniz.</li><li>Kart yalnızca tarayıcınızdaki cüzdana gelir. Kiralama sunucusu kartı görmez.</li><li>Rezervasyonda doğrulayıcı yalnızca <span class="mono">age_over_25, license_2y, class_ok</span> (true/false) iletir.</li></ul>
+      <a class="btn ghost" href="http://localhost:4000" target="_blank" rel="noopener" style="margin-top:16px">KimlikKasası'nı aç ↗</a>
+      <p class="muted small" style="margin-top:12px">Demo girişi için KimlikKasası ekranındaki uydurma kişilerden birini seçin (şifre: demo123).</p></div></div>`;
+  }else{
+    $('#accBody').innerHTML=flashHtml()+`<div class="sec-head" style="margin-top:0"><h2>Hesabım</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn primary" href="#araclar">Araç seç</a><button class="btn ghost" data-act="logout" type="button">Çıkış yap</button><button class="btn warn" data-act="delAcc" type="button">Hesabı sil</button></div></div>
+    <div class="cols"><div class="panel"><span class="chip cl">Kiralama sitesindeki hesap</span><h3 style="margin:12px 0 8px">${esc(a.name)}</h3><pre>${esc(JSON.stringify({demo_user_id:a.id,ad_soyad:a.name,e_posta:a.email,veri_saglayici_ref:a.subject},null,2))}</pre><p class="muted small" style="margin-top:8px">Doğum tarihi ve kimlik numarası bu kayıtta yok. <span class="mono">veri_saglayici_ref</span>, KimlikKasası'nın bu siteye özel ürettiği takma addır.</p></div>
+    <div class="panel"><span class="chip zk">KimlikKasası ve cüzdan</span><h3 style="margin:12px 0 8px">Kimlik kartı alındı</h3><p class="muted">KimlikKasası, doğum tarihinizi içeren imzalı bir kimlik kartını cüzdanınıza verdi. Kart ${Wallet.has(a.subject)?'<b>cüzdanınızda</b>':'<b>cüzdanınızda bulunamadı</b>, hesabı silip yeniden oluşturun'} ve burada gösterilmez. Rezervasyonda kartı kiralama sitesine vermezsiniz; yalnızca kanıt gider ve cevap true/false olur.</p></div></div>
+    <div class="panel" style="margin-top:16px"><h3>Kiralama sunucusunun veritabanında ne var?</h3><p class="muted small" style="margin:6px 0 12px">Aşağıdaki düğme, kiralama sunucusunun kendi kayıtlarını gösterir. ZKP rezervasyonlarında doğum tarihi veya kimlik no yoktur; klasik rezervasyonlarda vardır.</p><button class="btn ghost" data-act="dump" type="button">Veritabanını göster</button><pre id="dumpOut" style="margin-top:12px" hidden></pre></div>`;
+  }
+  updNav()}
+
+/* ---------- araç kartları ---------- */
+const IC_SEAT='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2a5 5 0 015-5h4a5 5 0 015 5v2"/></svg>',
+ IC_BAG='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a3 3 0 016 0v2"/></svg>',
+ IC_GEAR='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>',
+ IC_FUEL='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 012-2h6a2 2 0 012 2v16M4 21h10M14 10h2a2 2 0 012 2v4a1.5 1.5 0 003 0V9l-3-3"/></svg>',
+ IC_STAR='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.5 7L12 17.5 5.7 21l1.5-7L2 9.3l7-.8z"/></svg>',
+ IC_OK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>';
+const rating=v=>({r:(4.3+((v.id*7)%6)/10).toFixed(1),n:90+v.id*41});
+function carCard(v){const rt=rating(v),n=days(S.start,S.end);
+  return `<article class="car ${v.ok?'':'off'}"><div class="stage">${carSVG(v.shape,v.color)}<span class="chip ${v.ok?'ok':'no'}">${v.ok?'Müsait':'Müsait değil'}</span></div>
+  <div class="body"><div><h3>${v.brand} ${v.model}</h3><div class="sub">${v.type} · ${v.year} veya benzeri</div></div>
+  <div class="rate"><span>${IC_STAR}</span><b>${rt.r}</b> (${rt.n} yorum)</div>
+  <div class="spec"><span>${IC_SEAT}${v.seats} koltuk</span><span>${IC_BAG}${v.bags} bavul</span><span>${IC_GEAR}${v.gear}</span><span>${IC_FUEL}${v.fuel}</span></div>
+  <div class="free">${IC_OK}Ücretsiz iptal</div>
+  <div class="foot"><div><div class="price">${TL(v.daily)}<small>/ gün</small></div><div class="tot">${n} gün toplam ${TL(v.daily*n)}</div></div><button class="btn ${v.ok?'primary':'ghost'}" data-open="${v.id}">${v.ok?'Seç':'İncele'}</button></div></div></article>`}
+const CATS=[['Ekonomi','hatch','#d9604a'],['Kompakt','hatch','#4a7bd0'],['SUV','suv','#37506b'],['Elektrik','suv','#8ea7b8'],['Premium','sedan','#1c2530'],['Van','van','#d5d8da']];
+function renderCats(){$('#cats').innerHTML=CATS.map(([t,sh,c])=>{const m=Math.min(...VEHICLES.filter(v=>v.type===t).map(v=>v.daily));return `<button class="cat" type="button" data-cat="${t}">${carSVG(sh,c)}<b>${t}</b><span>${isFinite(m)?TL(m)+' / günden':'Yakında'}</span></button>`}).join('')}
+
+function renderFeatured(){$('#featured').innerHTML=[3,5,7].map(id=>carCard(VEHICLES.find(v=>v.id===id))).join('')}
+
+function pills(el,vals,key){el.innerHTML=['Tümü',...vals].map(v=>`<button type="button" class="pill" data-f="${key}" data-v="${v==='Tümü'?'':v}" aria-pressed="${(S[key]||'')===(v==='Tümü'?'':v)}">${v}</button>`).join('')}
+function renderList(){
+  pills($('#fType'),['Ekonomi','Kompakt','SUV','Elektrik','Premium','Van'],'type');
+  pills($('#fFuel'),['Benzin','Dizel','Hibrit','Elektrik'],'fuel');
+  $('#fPrice').value=S.maxPrice;$('#fPriceVal').textContent=TL(S.maxPrice);$('#fAvail').checked=S.avail;$('#fSort').value=S.sort;
+  let l=VEHICLES.filter(v=>(!S.type||v.type===S.type)&&(!S.fuel||v.fuel===S.fuel)&&v.daily<=S.maxPrice&&(!S.avail||v.ok));
+  const [k,d]=S.sort.split('-');l.sort((a,b)=>(k==='price'?a.daily-b.daily:k==='year'?a.year-b.year:a.seats-b.seats)*(d==='asc'?1:-1));
+  $('#listInfo').textContent=`${l.length} araç · ${fmtDate(S.start)} – ${fmtDate(S.end)} · ${S.city}`;
+  $('#carGrid').innerHTML=l.length?l.map(carCard).join(''):'<div class="panel" style="grid-column:1/-1"><h3>Araç bulunamadı</h3><p class="muted" style="margin-top:6px">Filtreleri gevşetin veya sıfırlayın.</p></div>'}
+
+/* ---------- detay ---------- */
+function priceSum(v){const n=days(S.start,S.end);const base=n*v.daily;const ins=S.ins?n*250:0;return {n,base,ins,total:base+ins}}
+function renderDetail(){
+  const v=VEHICLES.find(x=>x.id===S.selected);if(!v){location.hash='araclar';return}
+  const p=priceSum(v);
+  $('#detailBody').innerHTML=`<a href="#araclar" class="btn ghost" style="margin-bottom:16px">← Araçlara dön</a>
+  <div class="detail"><div><div class="stage">${carSVG(v.shape,v.color)}</div>
+    <dl class="specs"><div><dt>Tip</dt><dd>${v.type}</dd></div><div><dt>Model yılı</dt><dd>${v.year}</dd></div><div><dt>Yakıt</dt><dd>${v.fuel}</dd></div><div><dt>Vites</dt><dd>${v.gear}</dd></div><div><dt>Koltuk</dt><dd>${v.seats}</dd></div><div><dt>Bagaj</dt><dd>${v.bags} bavul</dd></div><div><dt>Sürücü koşulu</dt><dd>25+ yaş, 2+ yıl ehliyet, B sınıfı</dd></div><div><dt>Durum</dt><dd>${v.ok?'Müsait':'Müsait değil'}</dd></div></dl></div>
+  <div class="panel raised"><h1 style="font-size:clamp(1.6rem,3vw,2.2rem)">${v.brand} ${v.model}</h1>
+    <div class="form-grid" style="margin-top:16px"><div class="field"><label for="dStart">Alış</label><input type="date" id="dStart" min="${iso(today)}" value="${S.start}"></div><div class="field"><label for="dEnd">Teslim</label><input type="date" id="dEnd" min="${S.start}" value="${S.end}"></div></div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:14px;text-transform:none;letter-spacing:0;font:500 14px var(--f-body);color:var(--ink)"><input type="checkbox" id="dIns" ${S.ins?'checked':''}> Tam kasko (+${TL(250)} / gün)</label>
+    <div class="sum"><div><span>${TL(v.daily)} × ${p.n} gün</span><span>${TL(p.base)}</span></div>${S.ins?`<div><span>Tam kasko</span><span>${TL(p.ins)}</span></div>`:''}<div class="total"><span>Toplam</span><span>${TL(p.total)}</span></div></div>
+    <button class="btn primary" style="width:100%;margin-top:16px" id="goBook" ${v.ok?'':'disabled'}>${v.ok?'Rezervasyona geç':'Bu araç müsait değil'}</button>
+    <p class="muted small" style="margin-top:10px">Ödeme alınmaz. Bu adımda sürücü uygunluğu sorulacak; doğum tarihi ve ehliyet bilgisi istenmez.</p></div></div>`}
+
+/* ---------- rezervasyon ---------- */
+function stepper(n){const names=['Tarih ve fiyat','Sürücü uygunluğu','Sonuç'];return `<ol class="steps">${names.map((t,i)=>`<li ${n===i+1?'aria-current="step"':''} class="${n>i+1?'done':''}"><b>${n>i+1?'✓':i+1}</b>${t}</li>`).join('')}</ol>`}
+function renderBook(){
+  const v=VEHICLES.find(x=>x.id===S.selected);if(!v){location.hash='araclar';return}
+  const B=S.book,p=priceSum(v);let h=flashHtml()+`<h2 style="margin-bottom:16px">Rezervasyon · ${v.brand} ${v.model}</h2>`+stepper(B.step);
+  if(B.step===1){
+    h+=`<div class="cols"><div class="panel"><h3>Seçiminiz</h3><div class="sum"><div><span>Alış</span><span>${fmtDate(S.start)}</span></div><div><span>Teslim</span><span>${fmtDate(S.end)}</span></div><div><span>Alış noktası</span><span>${esc(S.city)}</span></div><div><span>${p.n} gün${S.ins?' + kasko':''}</span><span>${TL(p.base+p.ins)}</span></div></div></div>
+    <div class="panel"><h3>Bu araç için koşul</h3><p style="margin:10px 0 14px">Sürücü, alış tarihinde şu üç koşulu sağlamalıdır:</p><ul style="margin:0 0 14px;padding-left:18px"><li><b>25 yaş veya üzeri</b></li><li><b>Ehliyet en az 2 yıllık</b></li><li><b>Ehliyet sınıfı B veya üzeri</b> (motosiklet sınıfı yeterli değil)</li></ul><p class="muted small">Bir sonraki adımda bu koşulu iki yöntemle doğrulayabilirsiniz. Karşılaştırmak için aynı hesapla iki yöntemi de deneyebilirsiniz.</p>
+    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap"><button class="btn ghost" data-act="backDetail">Geri</button><button class="btn primary" data-act="toStep2">Uygunluk kontrolüne geç</button></div></div></div>`;
+  }else if(B.step===2){
+    if(!S.account){h+=`<div class="panel raised"><h3>Önce bir demo hesap gerekli</h3><p class="muted" style="margin:8px 0 16px">Uygunluk kontrolü, veri sağlayıcıdaki kaydınıza göre yapılır. Hesap oluşturduktan sonra buraya döneceksiniz.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" data-act="toStep1">Geri</button><button class="btn primary" data-act="toAccount">Hesap oluştur</button></div></div>`;$('#bookBody').innerHTML=h;return}
+    const hasCred=Wallet.has(S.account.subject);
+    h+=`<div class="banner" style="margin-bottom:16px">Hesap: <b>${esc(S.account.name)}</b>. Yaş ve ehliyet süresi, <b>alış tarihine (${fmtDate(S.start)})</b> göre hesaplanır.</div>
+    ${hasCred?'':'<div class="banner" style="margin-bottom:16px;border-color:var(--bad);color:var(--bad);background:var(--bad-soft)">Cüzdanda bu hesap için güncel kimlik kartı yok (kart biçimi yenilendi veya tarayıcı verisi temizlendi). Hesabı silip yeniden oluşturun; ZKP akışı bu olmadan çalışmaz.</div>'}
+    <h3 style="margin-bottom:10px">Doğrulama yöntemi</h3><div class="two">
+    <button type="button" class="flow cl" data-flow="classic" aria-pressed="${B.flow==='classic'}"><span class="chip cl">Klasik demo</span><h3>Profil bilgileriyle doğrulama</h3><p class="muted small">KimlikKasası onay ekranına gidersiniz; kiralama sunucusu ad, T.C. no, doğum tarihi, ehliyet sınıfı ve ehliyet tarihinizi alır.</p><ul><li>Ad, e-posta, doğum tarihi, kimlik no, ehliyet bilgileri ve hesap kimliği kiralama API'sine gider</li><li>Yaş ve ehliyet koşulları kiralama tarafında hesaplanır</li><li>Alanlar rezervasyonla saklanır (demo politikası)</li></ul></button>
+    <button type="button" class="flow zk" data-flow="zkp" aria-pressed="${B.flow==='zkp'}" ${hasCred?'':'disabled'}><span class="chip zk">Gizlilik korumalı · Gerçek ZKP (Groth16)</span><h3>Uygunluk kanıtı (yaş + ehliyet)</h3><p class="muted small">Tek kanıt, cüzdanınızda tarayıcıda üretilir.</p><ul><li>Kanıt doğrudan doğrulayıcı servise gider; kiralama API'si kanıtı görmez</li><li>Doğum tarihi, ehliyet tarihi, ehliyet sınıfı ve kimlik no kanıtın içinde bile yer almaz</li><li>Doğrulayıcı kiralama sitesine yalnızca üç true/false döner</li><li>Rezervasyonda yalnızca bu sonuçlar saklanır</li></ul></button></div>
+    ${B.busy?'<div class="banner zk" style="margin-top:16px" role="status"><b>Kanıt üretiliyor…</b> Devre dosyaları ilk kullanımda yüklenir (yaklaşık 5 MB), kanıt 1-2 saniye sürer.</div>':''}
+    <div style="display:flex;gap:8px;margin-top:22px;flex-wrap:wrap"><button class="btn ghost" data-act="toStep1" ${B.busy?'disabled':''}>Geri</button><button class="btn primary" data-act="verify" ${B.flow&&!B.busy?'':'disabled'}>${B.busy?'Çalışıyor…':'Doğrulamayı başlat'}</button></div>`;
+  }else{
+    const r=B.result,pr=S.account,isZ=r.flow==='zkp';
+    h+=`<div class="verdict ${r.eligible?'ok':'no'}"><span style="font-size:1.6rem">${r.eligible?'✓':'✕'}</span><div><h3>${r.eligible?'Uygun: tüm koşullar sağlandı':(r.ok?'Uygun değil: '+esc(failedList(r.response).join(' · ')+(failedList(r.response).length>1?' koşulları sağlanmıyor':' koşulu sağlanmıyor')):'Doğrulama başarısız')}</h3><div class="small" style="font-weight:500">${r.eligible?'Rezervasyon taslağı oluşturuldu (ödeme alınmadı).':(r.ok?'Bu araç için rezervasyon tamamlanamaz.':esc(r.response.error||''))} · ${isZ?'Gerçek ZKP (Groth16)':'Klasik demo'} · ${esc(pr.name)}</div></div></div>
+    ${r.ok?`<div class="panel" style="margin-top:16px"><h3>Koşullar</h3><div class="sum">${CLAIMS.map(c=>`<div><span>${c.l}</span><b style="color:var(${r.response[c.k]?'--good':'--bad'})">${r.response[c.k]?'✓ Sağlandı':'✕ Sağlanmadı'}</b></div>`).join('')}</div>
+      <p class="muted small" style="margin-top:10px">${isZ?'Kiralama sitesi yalnızca bu üç evet/hayır cevabını öğrendi. '+CLAIMS.map(c=>c.hid.toLowerCase()).join(', ')+' kanıtın hiçbir yerinde yer almaz.':'Klasik yöntemde kiralama sitesi tarihleri ve sınıfı doğrudan aldı, koşulları kendisi hesapladı.'}</p></div>`:''}
+    <div class="cols" style="margin-top:16px">
+      <div class="panel"><h3>Gizlilik özeti</h3>
+        <div class="sum"><div><span>Kiralama API'sine giden alan</span><b>${r.disclosed.length}</b></div><div><span>Saklanan hassas alan</span><b>${isZ?0:SENS}</b></div><div><span>Toplam süre</span><b class="mono">${fmtMs(r.ms)} ms</b></div>${isZ?`<div><span>Kanıt üretimi (kullanıcı cihazı)</span><b class="mono">${fmtMs(r.proveMs)} ms</b></div><div><span>Doğrulama (doğrulayıcı servis)</span><b class="mono">${fmtMs(r.verifyMs)} ms</b></div>`:''}</div>
+        <p class="lbl" style="margin:16px 0 8px">Gönderilen</p><div style="display:flex;gap:6px;flex-wrap:wrap">${r.disclosed.map(k=>`<span class="chip ${isZ?'zk':'cl'}">${k}</span>`).join('')}</div>
+        <p class="lbl" style="margin:14px 0 8px">Paylaşılmayan</p><div style="display:flex;gap:6px;flex-wrap:wrap">${isZ?FIELDS.map(f=>`<span class="chip">${f.k}</span>`).join(''):'<span class="chip">Yok: tüm profil alanları gönderildi</span>'}</div>
+        <p class="lbl" style="margin:14px 0 8px">Süreç</p><ul class="log">${r.log.map(l=>`<li><time>${fmtMs(l.ms)} ms</time><span>${esc(l.t)}</span></li>`).join('')}</ul></div>
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+        ${isZ?`<div class="panel"><h3>1 · Cüzdandan doğrulayıcıya giden kanıt</h3><pre>${esc(JSON.stringify(r.proofSent,null,2))}</pre><p class="muted small" style="margin-top:8px">publicSignals sırası: age_over_25, license_2y, class_ok, veri sağlayıcı açık anahtarı (Ax, Ay), alış tarihi (YYYYMMDD), hesap referansı, nonce. Doğum tarihi, ehliyet tarihi ve ehliyet sınıfı yok. <b>Kiralama sitesi bu isteği görmez.</b></p>
+          <h3 style="margin-top:14px">2 · Kiralama sunucusuna giden istek</h3><pre>${esc(JSON.stringify(r.request,null,2))}</pre>
+          <h3 style="margin-top:14px">3 · Doğrulayıcının kiralama sunucusuna cevabı</h3><pre>${esc(JSON.stringify(r.response,null,2))}</pre></div>`
+        :`<div class="panel"><h3>Kiralama API'sine giden istek</h3><pre>${esc(JSON.stringify(r.request,null,2))}</pre><h3 style="margin-top:14px">Yanıt</h3><pre>${esc(JSON.stringify(r.response,null,2))}</pre></div>`}
+        <div class="panel"><h3>Rezervasyon veritabanındaki kayıt</h3><pre>${esc(JSON.stringify(r.record,null,2))}</pre>${isZ?'<p class="muted small" style="margin-top:8px">Kayıtta doğum tarihi, ehliyet tarihi, ehliyet sınıfı veya kimlik numarası alanı yoktur.</p>':'<p class="muted small" style="margin-top:8px">Bu demoda klasik akış, aldığı alanları kayda yazar.</p>'}</div>
+      </div></div>
+    ${isZ&&r.ok?`<div class="panel" style="margin-top:16px"><h3>Saldırı denemeleri</h3><p class="muted small" style="margin:6px 0 12px">Gerçek doğrulayıcının bu istekleri nasıl reddettiğini deneyin.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" data-act="replay">Aynı kanıtı tekrar gönder</button><button class="btn ghost" data-act="tamper">Yaş sonucunu değiştirip gönder</button><button class="btn ghost" data-act="tamper1">Ehliyet sonucunu değiştirip gönder</button><button class="btn ghost" data-act="tamper2">Sınıf sonucunu değiştirip gönder</button></div><div id="attackOut" style="margin-top:12px" role="status"></div></div>`:''}
+    <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap"><button class="btn ghost" data-act="toStep2">Diğer yöntemi dene</button><a class="btn ghost" href="#gizlilik">Gizlilik karşılaştırma</a><a class="btn" href="#araclar">Araçlara dön</a></div>`;
+  }
+  $('#bookBody').innerHTML=h}
+
+/* ---------- gizlilik tablosu ---------- */
+function renderPrivacy(){
+  const yes='<span class="chip cl">Evet</span>',no='<span class="chip ok">Hayır</span>',
+        rows=[
+   ...FIELDS.map(f=>[f.l+(f.sens?' · hassas':''),yes,yes,no,no]),
+   ...CLAIMS.map(c=>[c.k+' (yalnızca sonuç)','<span class="chip">Hesaplanır</span>',yes,'<span class="chip zk">Evet</span>','<span class="chip zk">Evet (true/false)</span>']),
+   ['Proof + nonce (teknik)',no,no,'<span class="chip zk">Evet</span>',no]];
+  $('#privRows').innerHTML=rows.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')}
+
+/* ---------- analitik ---------- */
+let STATS={classic:null,zkp:null};let BATCH_BUSY=false;
+const statsOf=(t,okc,n)=>({n,med:median(t),p95:p95(t),succ:okc/n});
+function runClassicBatch(n=100){
+  const SUBJ=TestIssuer.subjects(),asOf=S.start;const t=[];let okc=0;
+  for(let i=METRICS.length-1;i>=0;i--)if(METRICS[i].flow_type==='classic'&&METRICS[i].bench)METRICS.splice(i,1);
+  for(let i=0;i<n;i++){
+    const sub=SUBJ[i%SUBJ.length],rec=TestIssuer.record(sub);
+    const t0=now();const eligible=allOk(claimsFromRecord(rec,asOf));const ms=now()-t0;
+    const success=eligible===allOk(TestIssuer.truth(sub,asOf));if(success)okc++;t.push(ms);
+    pushMetric({flow_type:'classic',bench:1,duration_ms:+ms.toFixed(4),success,disclosed_field_count:FIELDS.length});
+  }
+  STATS.classic={...statsOf(t,okc,n),disc:FIELDS.length,sens:SENS};renderStats()}
+async function runZkBatch(n){
+  if(BATCH_BUSY)return;BATCH_BUSY=true;const info=$('#batchInfo');
+  try{
+    await TestIssuer.init();const SUBJ=TestIssuer.subjects(),asOf=S.start,tot=[],pv=[],vf=[];let okc=0,rej=0;
+    for(let i=METRICS.length-1;i>=0;i--)if(METRICS[i].flow_type==='zkp'&&METRICS[i].bench)METRICS.splice(i,1);
+    info.textContent='Devre dosyaları yükleniyor…';await ZK.assets();
+    for(let i=0;i<n;i++){
+      info.textContent='ZKP ölçümü: '+(i+1)+' / '+n;await new Promise(r=>setTimeout(r,0));
+      const sub=SUBJ[i%SUBJ.length],nonce=uid()+uid().slice(0,4),t0=now();
+      const pr=await Wallet.proveWith(TestIssuer.issue(sub),nonce,ymd(asOf),TestIssuer.publicKey());const proveMs=now()-t0;
+      const v=await toVerifier('/api/bench/verify',{proof:pr.proof,publicSignals:pr.publicSignals});const total=now()-t0;
+      const tr=TestIssuer.truth(sub,asOf),cl=v.claims||{};const success=v.valid&&CLAIMS.every(c=>cl[c.k]===tr[c.k]);if(success)okc++;
+      tot.push(total);pv.push(proveMs);vf.push(v.verify_ms);
+      const tv=await toVerifier('/api/bench/verify',tamperRequest(pr));if(!tv.valid)rej++;
+      pushMetric({flow_type:'zkp',bench:1,duration_ms:+total.toFixed(3),prove_ms:+proveMs.toFixed(3),verify_ms:+v.verify_ms.toFixed(3),success,disclosed_field_count:CLAIMS.length});
+    }
+    STATS.zkp={...statsOf(tot,okc,n),prove:median(pv),proveP95:p95(pv),verify:median(vf),verifyP95:p95(vf),rej:rej/n,disc:CLAIMS.length,sens:0};
+    info.textContent='ZKP ölçümü tamamlandı: '+n+' tekrar';
+  }catch(e){info.textContent='Ölçüm yapılamadı: '+String(e&&e.message||e)}
+  BATCH_BUSY=false;renderStats()}
+function bars(el,rows,unit){
+  const vals=rows.flatMap(r=>[r.cl,r.zk]).filter(v=>v!=null);const max=Math.max(...vals,0.001);
+  el.innerHTML=rows.map(r=>`<div class="bar-row"><div class="lab">${r.l}</div><div class="track">
+   ${r.cl!=null?`<div class="b cl" style="width:${Math.max(4,r.cl/max*100)}%">${r.fmt(r.cl)}${unit||''}</div>`:''}${r.zk!=null?`<div class="b zk" style="width:${Math.max(4,r.zk/max*100)}%">${r.fmt(r.zk)}${unit||''}</div>`:'<div class="muted small mono">ölçüm yok</div>'}</div></div>`).join('')}
+function renderStats(){
+  const c=STATS.classic,z=STATS.zkp,pc=x=>(x*100).toFixed(0)+'%',dash='—';
+  if(!c&&!z)return;
+  const g=(o,f)=>o?f(o):null;
+  $('#kpis').innerHTML=[
+   ['Tekrar sayısı','Klasik '+(c?c.n:dash)+' · ZKP '+(z?z.n:dash),'Test kayıtları dönüşümlü'],
+   ['Başarı oranı','Klasik '+(c?pc(c.succ):dash)+' · ZKP '+(z?pc(z.succ):dash),'Doğru karar / toplam geçerli senaryo'],
+   ['Hatalı kanıtı reddetme',z?pc(z.rej):dash,z?'Değiştirilmiş gerçek kanıt, '+z.n+' deneme':'ZKP ölçümünü çalıştırın'],
+   ['Saklanan hassas alan','Klasik '+SENS+' · ZKP 0','Kiralama DB şemasına göre']]
+   .map(k=>`<div class="panel"><div class="lbl">${k[0]}</div><div style="font:800 1.35rem var(--f-display);margin:8px 0 4px">${k[1]}</div><div class="muted small">${k[2]}</div></div>`).join('');
+  bars($('#chartTime'),[
+    {l:'Toplam · medyan',cl:g(c,o=>o.med),zk:g(z,o=>o.med),fmt:fmtMs},
+    {l:'Toplam · p95',cl:g(c,o=>o.p95),zk:g(z,o=>o.p95),fmt:fmtMs},
+    {l:'Kanıt üretimi · medyan (kullanıcı cihazı)',cl:null,zk:g(z,o=>o.prove),fmt:fmtMs},
+    {l:'Doğrulama · medyan (doğrulayıcı servis)',cl:null,zk:g(z,o=>o.verify),fmt:fmtMs}],' ms');
+  bars($('#chartDisc'),[{l:'Açıklanan alan',cl:FIELDS.length,zk:CLAIMS.length,fmt:v=>v},{l:'Saklanan hassas alan',cl:SENS,zk:0,fmt:v=>v}]);
+  $('#csv').value='event_id,flow_type,duration_ms,prove_ms,verify_ms,success,disclosed_field_count\n'+METRICS.map(m=>[m.event_id,m.flow_type,m.duration_ms,m.prove_ms,m.verify_ms,m.success,m.disclosed_field_count].join(',')).join('\n')}
+
+/* ---------- yönlendirme ---------- */
+const VIEWS=['anasayfa','araclar','arac','rezervasyon','hesap','gizlilik','analitik'];
+function route(){
+  let h=(location.hash||'#anasayfa').slice(1);if(!VIEWS.includes(h))h='anasayfa';
+  if((h==='arac'||h==='rezervasyon')&&!S.selected)h='araclar';
+  VIEWS.forEach(v=>$('#v-'+v).hidden=v!==h);
+  const navKey=h==='arac'||h==='rezervasyon'?'araclar':h;
+  $$('nav a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.nav===navKey)||a.removeAttribute('aria-current'));
+  $$('nav a').forEach(a=>{if(a.dataset.nav===navKey)a.setAttribute('aria-current','page')});
+  if(h==='araclar')renderList();if(h==='arac')renderDetail();if(h==='rezervasyon')renderBook();
+  if(h==='hesap')renderAccount();
+  if(h==='gizlilik')renderPrivacy();if(h==='analitik'){if(!STATS.classic)runClassicBatch(100);else renderStats()}
+  window.scrollTo(0,0)}
+addEventListener('hashchange',route);
+
+/* ---------- olaylar ---------- */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('button,a');if(!t)return;
+  if(t.dataset.cat){S.type=t.dataset.cat;S.fuel='';location.hash='araclar';return}
+  if(t.dataset.open){S.selected=+t.dataset.open;S.book={step:1,flow:null,result:null};location.hash='arac';return}
+  if(t.dataset.fill){const f=$('#aBirth');if(f)f.value=t.dataset.fill==='today'?BIRTH(25,0):BIRTH(+t.dataset.fill,-40);return}
+  if(t.dataset.f){S[t.dataset.f]=t.dataset.v;renderList();return}
+  if(t.dataset.flow){S.book.flow=t.dataset.flow;renderBook();return}
+  const a=t.dataset.act;if(!a)return;const B=S.book;
+  if(a==='toAccount'){S.returnTo='rezervasyon';location.hash='hesap'}
+  if(a==='delAcc'){if(S.account)Wallet.forget(S.account.subject);S.account=null;saveAccount();try{localStorage.removeItem('pd_known')}catch(_){}S.book={step:1,flow:null,result:null};renderAccount()}
+  if(a==='logout'){S.account=null;saveAccount();S.book={step:1,flow:null,result:null};S.flash={good:true,t:'Çıkış yapıldı. Kimlik kartın bu cihazdaki cüzdanda duruyor; tekrar giriş yapabilirsin.'};if(location.hash!=='#hesap')location.hash='hesap';else renderAccount();updNav();window.scrollTo(0,0)}
+  if(a==='quickLogin'){const k=knownAccount();if(k){S.account=k;saveAccount();renderAccount();updNav()}}
+  if(a==='backDetail')location.hash='arac';
+  if(a==='toStep1'){B.step=1;renderBook()}
+  if(a==='toStep2'){B.step=2;renderBook()}
+  if(a==='verify'){if(B.busy)return;
+    if(B.flow==='classic'){startConsent('classic',{kind:'classic',S:snap()});return}
+    B.busy=true;renderBook();
+    try{B.result=await runZkFlow(S.account,S.start,S.selected)}catch(err){B.result=failFlow('zkp',String(err&&err.message||err))}
+    B.busy=false;const R=B.result;
+    pushMetric({flow_type:R.flow,duration_ms:+R.ms.toFixed(4),prove_ms:+R.proveMs.toFixed(3),verify_ms:+R.verifyMs.toFixed(3),success:R.ok,disclosed_field_count:R.disclosed.length});
+    B.step=3;renderBook();window.scrollTo(0,0)}
+  if(a==='dump'){try{const d=await API('/api/db-dump');const o=$('#dumpOut');o.hidden=false;o.textContent=JSON.stringify(d,null,2)}catch(e){alert(e.message)}}
+  const showAtk=(r,extra)=>{$('#attackOut').innerHTML=`<div class="banner zk"><b>${r.error?'Reddedildi':'Kabul edildi (beklenmeyen)'}:</b> ${esc(r.error||JSON.stringify(r))}</div>${extra||''}`};
+  if(a==='replay'||/^tamper\d?$/.test(a)){const R=S.book.result,P=R.proofSent,ti=a==='tamper'?0:+a.slice(6);
+    const body=a==='replay'?{proof:P.proof,publicSignals:P.publicSignals}:tamperRequest(P,ti);
+    try{const v=await toVerifier('/api/sessions/'+R.sessionId+'/proof',body);
+      showAtk(v.accepted?{accepted:true}:{error:v.error},a!=='replay'?`<p class="muted small" style="margin-top:8px">${CLAIMS[ti].k} değeri değiştirildi: <span class="mono">${esc(P.publicSignals[ti])} → ${esc(body.publicSignals[ti])}</span></p>`:'')}catch(e){showAtk({error:e.message})}}
+});
+document.addEventListener('input',e=>{
+  const id=e.target.id;
+  if(id==='fPrice'){S.maxPrice=+e.target.value;renderList()}
+  if(id==='fAvail'){S.avail=e.target.checked;renderList()}
+  if(id==='fSort'){S.sort=e.target.value;renderList()}
+  if(id==='dStart'){S.start=e.target.value;if(S.end<=S.start)S.end=iso(addDays(new Date(S.start+'T00:00:00'),1));renderDetail()}
+  if(id==='dEnd'){if(e.target.value>S.start)S.end=e.target.value;renderDetail()}
+  if(id==='dIns'){S.ins=e.target.checked;renderDetail()}
+});
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='accForm')return;e.preventDefault();
+  const name=$('#aName').value.trim(),email=$('#aMail').value.trim(),err=$('#accErr');
+  if(name.length<2){err.textContent='Ad soyad en az 2 karakter olmalı.';return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='Geçerli bir e-posta yazın (örn. demo@example.test).';return}
+  err.textContent='';
+  try{await startConsent('zk',{kind:'account',name,email,S:snap()})}catch(x){err.textContent='KimlikKasası ile bağlantı kurulamadı: '+x.message}
+});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a');if(!t)return;
+  if(t.id==='goBook'){S.book={step:1,flow:null,result:null};location.hash='rezervasyon'}
+  if(t.id==='fReset'){Object.assign(S,{type:'',fuel:'',maxPrice:4500,sort:'price-asc',avail:true});renderList()}
+  if(t.id==='runClassic')runClassicBatch(100);
+  if(t.id==='runZk10')runZkBatch(10);
+  if(t.id==='runZk100')runZkBatch(100);
+  if(t.id==='copyCsv'){const ta=$('#csv');const done=()=>t.textContent='Kopyalandı';const fb=()=>{ta.select();t.textContent='Metni seçtim, Ctrl+C ile kopyalayın'};
+    try{navigator.clipboard.writeText(ta.value).then(done,fb)}catch(_){fb()}}
+});
+$('#heroForm').addEventListener('submit',e=>{e.preventDefault();S.start=$('#hStart').value||S.start;S.end=$('#hEnd').value>S.start?$('#hEnd').value:iso(addDays(new Date(S.start+'T00:00:00'),1));S.type=$('#hType').value;S.city=$('#hCity').value;location.hash='araclar'});
+$('#hStart').min=iso(today);$('#hStart').value=S.start;$('#hEnd').value=S.end;
+$('#hStart').addEventListener('input',e=>{$('#hEnd').min=e.target.value});
+const BOOT=Promise.resolve();
+handleReturn().catch(e=>{S.flash={bad:true,t:String(e&&e.message||e)};location.hash='hesap'}).finally(()=>{renderFeatured();renderCats();$('#heroCar').innerHTML=carSVG('suv','#2f7de1');updNav();route()});
+</script>

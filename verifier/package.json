@@ -1,0 +1,9 @@
+{
+  "name": "proofpass-verifier",
+  "version": "1.0.0",
+  "description": "Bağımsız ZKP doğrulayıcı servisi. Kiralama sitesi kanıtı görmez, yalnızca true/false cevabını alır.",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "snarkjs": "0.7.5" }
+}
