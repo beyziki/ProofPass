@@ -5,3 +5,5 @@ rental/data/
 eski_dosyalar/
 .DS_Store
 Thumbs.db
+zk/build/
+zk/bin/

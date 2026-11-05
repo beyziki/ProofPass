@@ -1,0 +1,23 @@
+{
+  "name": "proofpass-zk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Circuit, trusted setup and browser bundle for the ProofPass demo",
+  "scripts": {
+    "build": "bash build.sh",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "assert": "^2.1.0",
+    "buffer": "^6.0.3",
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7",
+    "crypto-browserify": "^3.12.1",
+    "esbuild": "^0.25.0",
+    "events": "^3.3.0",
+    "process": "^0.11.10",
+    "snarkjs": "^0.7.5",
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.5"
+  }
+}
